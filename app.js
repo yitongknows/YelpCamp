@@ -59,7 +59,7 @@ const validateReview = (req, res, next) => {
 }
 
 app.get('/', (req, res) => {
-    res.render('home');
+    res.render('campgrounds/index');
 })
 
 app.get('/campgrounds', async (req, res) => {
@@ -80,14 +80,13 @@ app.post('/campgrounds', validateCampground, catchAsync(async (req, res) => {
 }));
 
 app.get('/campgrounds/:id', catchAsync(async(req, res) => {
-    const campground = await Campground.findById(req.params.id)
+    const campground = await Campground.findById(req.params.id).populate('reviews')
     res.render('campgrounds/show', {campground});
 }));
 
 app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/edit', {campground});
-
 }))
 
 app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) =>{
@@ -110,6 +109,13 @@ app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res)
     await review.save();
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`);
+}))
+
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+    const{id, reviewId} = req.params;
+    Campground.findByIdAndUpdate(id, {$pull: {reviews: reviewId}});
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/campgrounds/${id}`);
 }))
 
 app.all('*', (req, res, next)=>{
