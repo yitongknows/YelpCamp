@@ -10,6 +10,7 @@ const Joi = require('joi')
 const {campgroundSchema, reviewSchema} = require('./schemas.js')
 const Review = require('./models/review');
 const { required } = require('joi');
+const session = require('express-session');
 
 const campgrounds = require('./routes/campgrounds')
 const reviews = require('./routes/reviews')
@@ -40,6 +41,18 @@ app.engine('ejs', ejsMate)
 
 app.use('/campgrounds', campgrounds);
 app.use('/campgrounds/:id/reviews', reviews);
+
+const sessionConfig = {
+    secret: 'thisshouldbeabettersecret!',
+    resave: false,
+    saveUninitialized: true,
+    cookie:{
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: Date.now() + 1000 * 60 * 60 * 24 * 7
+    }
+}
+app.use(session(sessionConfig))
 
 app.get('/', (req, res) => {
     res.render('campgrounds/index');
