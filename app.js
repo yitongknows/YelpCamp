@@ -1,18 +1,12 @@
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
-const Campground = require("./models/campground");
 const methodOverride = require('method-override');
-const catchAsync = require('./utils/catchAsync')
 const ExpressError = require('./utils/ExpressError')
 const ejsMate = require('ejs-mate')
-const Joi = require('joi')
-const {campgroundSchema, reviewSchema} = require('./schemas.js')
-const Review = require('./models/review');
-const { required } = require('joi');
 const session = require('express-session');
 const flash = require('connect-flash')
-
+const LocalStrategy = require('passport-local')
 const campgrounds = require('./routes/campgrounds')
 const reviews = require('./routes/reviews')
 
