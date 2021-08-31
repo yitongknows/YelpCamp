@@ -1,22 +1,9 @@
 const express = require("express");
 const Campground = require("../models/campground");
 const catchAsync = require("../utils/catchAsync");
-const ExpressError = require("../utils/ExpressError");
-const { campgroundSchema } = require("../schemas.js");
-const review = require("../models/review");
-const isLoggedIn = require("../middleware");
+const { isLoggedIn, isAuthor, validateCampground } = require("../middleware");
 
 const router = express.Router();
-
-const validateCampground = (req, res, next) => {
-    const { error } = campgroundSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map((el) => el.message).join(",");
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-};
 
 router.get("/", async (req, res) => {
     const campgrounds = await Campground.find({});
@@ -60,12 +47,11 @@ router.get(
 router.get(
     "/:id/edit",
     isLoggedIn,
+    isAuthor,
     catchAsync(async (req, res) => {
-        const campground = await Campground.findById(req.params.id);
-        if (!campground.author.equals(req.user._id)) {
-            req.flash("error", "You do not have permission to do that!");
-            res.redirect(`/campgrounds/${req.params.id}`);
-        }
+        const { id } = req.params;
+        const campground = await Campground.findById(id);
+
         res.render("campgrounds/edit", { campground });
     })
 );
@@ -73,14 +59,10 @@ router.get(
 router.put(
     "/:id",
     isLoggedIn,
+    isAuthor,
     validateCampground,
     catchAsync(async (req, res) => {
         const { id } = req.params;
-        const campground = await Campground.findById(id);
-        if (!campground.author.equals(req.user._id)) {
-            req.flash("error", "You do not have permission to do that!");
-            res.redirect(`/campgrounds/${id}`);
-        }
         const camp = await Campground.findByIdAndUpdate(id, {
             ...req.body.campground,
         });
@@ -92,6 +74,7 @@ router.put(
 router.delete(
     "/:id",
     isLoggedIn,
+    isAuthor,
     catchAsync(async (req, res) => {
         const { id } = req.params;
         const campground = await Campground.findById(id);
